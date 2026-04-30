@@ -196,7 +196,8 @@ public class Server {
             }
         }
 
-        Path filePath = Path.of(uriPath);
+        String relativePath = uriPath.startsWith("/") ? uriPath.substring(1) : uriPath;
+        Path filePath = Path.of(relativePath);
         if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
             Logger.logDebug("Loaded '" + uriPath + "' from filesystem");
             return Files.readAllBytes(filePath);
