@@ -224,7 +224,8 @@ Dieses Kommando hat zwei besondere Eigenschaften:
 - `left ANGLE` -> Dreht die Schildkröte um den angegebenen Winkel nach links
 - `right ANGLE` -> Dreht die Schildkröte um den angegebenen Winkel
 - `color RGB[A]` -> Setzt die Farbe des Stifts der Schildkröte auf die angegebene Farbe, definiert durch die RGB-Werte und optional einem Alpha-Wert für die Transparenz
-- `text TEXT [FONT]` -> Zeichnet den angegebenen Text an der aktuellen Position der Schildkröte, optional mit einer Schriftart
+- `font FONT` -> Ändert die Font für nachfolgenden Text. ([CSS Font Property](https://www.w3schools.com/css/css_font_shorthand.asp))
+- `text TEXT` -> Zeichnet den angegebenen Text an der aktuellen Position der Schildkröte
 - `width WIDTH` -> Setzt die Breite des Stifts der Schildkröte auf die angegebene Breite
 - `push` -> Speichert die aktuelle Position und Ausrichtung der Schildkröte auf einem Stack
 - `pop` -> Stellt die zuletzt gespeicherte Position und Ausrichtung der Schildkröte wieder her
