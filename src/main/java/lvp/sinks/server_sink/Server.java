@@ -19,6 +19,7 @@ import java.util.concurrent.Executors;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import lvp.sinks.server_sink.Server.EventMessage;
 import lvp.skills.Scan;
 import lvp.skills.TextUtils;
 import lvp.skills.TextUtils.ReplacementType;
@@ -167,18 +168,16 @@ public class Server {
         final String resourcePath = exchange.getRequestURI().getPath().equals("/") ? INDEX : exchange.getRequestURI().getPath();
         Logger.logDebug("Sending '" + resourcePath + "'");
 
-        try (final InputStream stream = Server.class.getResourceAsStream(resourcePath)) {
-
-            if (stream == null) {
+        try {
+        final byte[] bytes = loadResource(resourcePath);
+            if (bytes == null) {
                 exchange.sendResponseHeaders(404, -1);
+                return;
             }
-            else {
-                final byte[] bytes = stream.readAllBytes();
-                exchange.getResponseHeaders().add("Content-Type", Files.probeContentType(Path.of(resourcePath)) + "; charset=utf-8");
-                exchange.sendResponseHeaders(200, bytes.length);
-                exchange.getResponseBody().write(bytes);
-            }
-                exchange.getResponseBody().flush();
+            exchange.getResponseHeaders().add("Content-Type", Files.probeContentType(Path.of(resourcePath)) + "; charset=utf-8");
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.getResponseBody().flush();
         } finally {
             exchange.close();
         }
@@ -187,6 +186,23 @@ public class Server {
     public void sendServerEvent(SSEType type, String data, String id, String sourceId) {
         Logger.logDebug("Event: " + type + " with data: " + data + " to " + sourceId);
         sendServerEvent(new EventMessage(type, Base64.getEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8)), id, sourceId));
+    }
+
+    private byte[] loadResource(String uriPath) throws IOException {
+        try (InputStream stream = Server.class.getResourceAsStream(uriPath)) {
+            if (stream != null) {
+                Logger.logDebug("Loaded '" + uriPath + "' from classpath");
+                return stream.readAllBytes();
+            }
+        }
+
+        Path filePath = Path.of(uriPath);
+        if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
+            Logger.logDebug("Loaded '" + uriPath + "' from filesystem");
+            return Files.readAllBytes(filePath);
+        }
+
+        return null; // Not found in either location
     }
 
     private void sendServerEvent(EventMessage event) {
