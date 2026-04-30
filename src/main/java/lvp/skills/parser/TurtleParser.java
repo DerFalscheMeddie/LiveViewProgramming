@@ -1,5 +1,7 @@
 package lvp.skills.parser;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,6 +15,8 @@ public class TurtleParser {
 
     private static final Pattern INIT_PATTERN = Pattern.compile("^init\\s+(\\d+)\\s+(\\d+)$");
     private static final Pattern INIT_ALT_PATTERN = Pattern.compile("^init\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)$");
+
+    private static String font = null;
 
     public static Turtle parse(String id, String content) {
         Stream<String> lines = content.lines().map(String::trim).filter(line -> !line.isEmpty());
@@ -100,10 +104,14 @@ public class TurtleParser {
                         turtle.color(r, g, b);
                     }
                     break;
+                case "font":
+                    font =  Arrays.stream(parts, 1, parts.length)
+                      .collect(Collectors.joining(" "));
+                    break;
                 case "text":
-                    String text = parts[1];
-                    if (parts.length >= 3) {
-                        String font = parts[2];
+                    String text =  Arrays.stream(parts, 1, parts.length)
+                      .collect(Collectors.joining(" "));
+                    if (font != null) {
                         turtle.text(text, font);
                     } else {
                         turtle.text(text);
