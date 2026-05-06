@@ -20,6 +20,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import java.io.File;
+import org.xml.sax.SAXException;
+import javax.xml.parsers.ParserConfigurationException;
 
 public class Main {
     private record Config(List<Source> sources, int port, LogLevel logLevel, Optional<String> watchFilter, boolean sourceOnly){}
@@ -32,14 +37,28 @@ public class Main {
             System.out.println("Warning: You are not using the latest release of Live View Programming. Please visit https://github.com/denkspuren/LiveViewProgramming/releases");
         }
 
+
         Processor processor = null;
         try {
+
+            Document doc = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new File("pom.xml"));
+
+            String neededJavaVersion = doc.getElementsByTagName("maven.compiler.release")
+                .item(0)
+                .getTextContent();
+            String currentVersion = String.valueOf(Runtime.version().feature());
+
+            if (neededJavaVersion != null && !neededJavaVersion.equals(currentVersion)) {
+              System.err.println("Error: Java version is not compatible with this project. Required version is " + neededJavaVersion + ", but running on " + currentVersion);
+            }
             processor = new Processor();
             processor.registerSink(new ServerSink(cfg.port()));
             FileWatcher watcher = new FileWatcher(cfg.sources(), cfg.watchFilter(), cfg.sourceOnly(), processor);
             Runtime.getRuntime().addShutdownHook(new Thread(watcher::stop));
             watcher.start();
-        } catch (IOException e) {
+        } catch (IOException | SAXException | ParserConfigurationException e) {
             System.err.println("Error starting lvp: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
